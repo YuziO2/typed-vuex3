@@ -1,5 +1,8 @@
 import Vue from "vue";
-import Vuex, { StoreOptions as VuexStoreOptions } from "vuex";
+import Vuex, {
+  Store,
+  StoreOptions as VuexStoreOptions,
+} from "vuex/types/index.js";
 
 Vue.use(Vuex);
 
@@ -80,12 +83,18 @@ export function createTypedStore<S, StoreOptions extends VuexStoreOptions<S>>(
     : never;
 
   // 提取嵌套模块的指定类型
-  type ExtractNestedModules<T, U extends string> = T extends {
-    modules: infer M;
-  }
+  type ExtractNestedModules<
+    T,
+    U extends string,
+    Depth extends number[] = []
+  > = Depth["length"] extends 7
+    ? {}
+    : T extends {
+        modules: infer M;
+      }
     ? {
         [K in keyof M]: ExtractModuleState<M[K], U> &
-          ExtractNestedModules<M[K], U>;
+          ExtractNestedModules<M[K], U, [...Depth, 1]>;
       }
     : {};
 
@@ -366,7 +375,7 @@ export function createTypedStore<S, StoreOptions extends VuexStoreOptions<S>>(
 
   return {
     store: store as unknown as Omit<
-      typeof store,
+      Store<StoreOptions>,
       "state" | "getters" | "commit" | "dispatch"
     > & {
       state: NestedState;

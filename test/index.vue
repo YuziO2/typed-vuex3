@@ -16,6 +16,8 @@ export default Vue.extend({
   created(this: Vue) {
     console.log(this.$$store.state.userInfo.test.test1.test21.test21);
     this.$$store.commit("userInfo/test/test1/setTest1", "123");
+    this.$$store.state.userInfo.test.test1.test21.test21;
+    this.$$store;
   },
 });
 </script>

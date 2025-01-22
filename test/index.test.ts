@@ -1,5 +1,6 @@
 import { Store } from "vuex/types/index.js";
-import { createTypedStore } from "typed-vuex3";
+import { createTypedStore } from "../src/index";
+import { createTypedStore as createTypedStore2 } from "../dist";
 
 const debug = process.env.NODE_ENV !== "production";
 const storeOptions = {
@@ -111,15 +112,15 @@ const a = mapState("userInfo/test/test1", ["test1"]);
 store;
 const b = mapGetters("userInfo/test/test1", ["getTest1"]);
 
-store.state.location.location;
+store.state.userInfo.test.test1.test21.test21;
+
+const store2 = createTypedStore2(storeOptions);
+store2.store.state.userInfo.test.test1.test21.test21;
+store2.store;
 
 // 将改造过后的 Store 类型声明到 vue 的原型上，这样就可以在.vue 文件中获得 IDE 的智能提示了
 declare module "vue/types/vue" {
   interface Vue {
-    $$store: Omit<
-      Store<typeof storeOptions>,
-      "state" | "getters" | "commit" | "dispatch"
-    > &
-      typeof store;
+    $$store: typeof store;
   }
 }

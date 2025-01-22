@@ -51,11 +51,7 @@ export const { store, mapState, mapGetters, mapMutations, mapActions } = createT
 // 声明 $$store 类型，避免与 Vuex 原生的 $store 类型冲突
 declare module "vue/types/vue" {
   interface Vue {
-    $$store: Omit<
-      Store<typeof storeOptions>,
-      "state" | "getters" | "commit" | "dispatch"
-    > &
-      typeof store;
+    $$store: typeof store
   }
 }
 ```
