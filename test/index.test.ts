@@ -30,15 +30,16 @@ const storeOptions = {
     userInfo: {
       state: {
         userInfo: "userInfo",
+        userInfo2: "userInfo2",
       },
       getters: {
         getUserInfo: () => "userInfo",
       },
       modules: {
         test: {
-          state: {
+          state: () => ({
             test: "test",
-          },
+          }),
           getters: {
             getTest: () => "test",
           },
@@ -112,6 +113,21 @@ const a = mapState("userInfo/test/test1", ["test1"]);
 store;
 const b = mapGetters("userInfo/test/test1", ["getTest1"]);
 
+const c = mapState(["userInfo/userInfo2"]);
+const d = mapState(["userInfo/test/test"]);
+store.state.userInfo.test.test;
+const e = mapState(["user"]);
+store.state.user;
+const f = mapState({ userInfo2: (state) => state.user.yuzi });
+const g = mapState({ userInfo2: (state) => state.userInfo.userInfo2 });
+const h = mapState("userInfo/test/test1", { test1: (state) => state.test1 });
+
+const i = mapGetters("userInfo/test/test1", ["getTest1"]);
+const j = mapGetters("userInfo/test/test1", { getTest1: "getTest1" });
+// @ts-expect-error
+const m = mapGetters("getLocation", ["getLocation"]);
+const k = mapGetters(["userInfo/test/test1/getTest1"]);
+const l = mapGetters({ getTest123: "userInfo/test/test1/getTest1" });
 store.state.userInfo.test.test1.test21.test21;
 
 const store2 = createTypedStore2(storeOptions);

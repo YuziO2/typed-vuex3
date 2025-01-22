@@ -115,6 +115,8 @@ export function createTypedStore<S, StoreOptions extends VuexStoreOptions<S>>(
         ModuleMap[K]["state"];
   } & GetRootProp<"state">;
 
+  type FlattedState = FlatModuleProperty<"state"> & GetRootProp<"state">;
+
   // 将一个对象的 key 添加前缀，为 namespace 的store进行转换
   type AddKeyPrefix<T, P extends string> = {
     [K in keyof T as `${P}${string & K}`]: T[K];
@@ -160,8 +162,10 @@ export function createTypedStore<S, StoreOptions extends VuexStoreOptions<S>>(
   // }
   type FlatModuleProperty<K extends string = "getters"> = UnionToIntersection<
     {
-      [M in keyof ModuleMap]: ModuleMap[M] extends { [key in K]: any }
-        ? AddKeyPrefix<ModuleMap[M][K], `${M & string}/`>
+      [M in keyof ModuleMap]: ModuleMap[M] extends { [key in K]: infer S }
+        ? S extends (...args: any[]) => infer R
+          ? AddKeyPrefix<R, `${M & string}/`> // 如果是函数，处理其返回值
+          : AddKeyPrefix<S, `${M & string}/`> // 如果是对象，直接处理
         : {};
     }[keyof ModuleMap]
   >;
@@ -219,12 +223,12 @@ export function createTypedStore<S, StoreOptions extends VuexStoreOptions<S>>(
     M extends Exclude<keyof MappedState, keyof GetRootProp<"state">>, // 去掉根模块，它的键不能作为命名空间，根store有getter、mutation、action时，同理也要去掉其map函数声明中有命名空间时的取值
     K extends keyof MappedState[M]
   >(namespace: M, map: K[]): { [Key in K]: () => MappedState[M][Key] }; // 有命名空间，map是数组
-  function mapState<K extends keyof MappedState>(
+  function mapState<K extends keyof FlattedState>(
     map: K[]
-  ): { [Key in K]: () => MappedState[K] }; // 没有命名空间，map是数组
-  function mapState<T extends { [key: string]: (state: MappedState) => any }>(
+  ): { [Key in K]: () => FlattedState[K] }; // 没有命名空间，map是数组，state应该是FlattedState
+  function mapState<T extends { [key: string]: (state: NestedState) => any }>(
     map: T
-  ): { [Key in keyof T]: () => ReturnType<T[Key]> }; // 没有命名空间，map是对象
+  ): { [Key in keyof T]: () => ReturnType<T[Key]> }; // 没有命名空间，map是对象，state应该是NestedState
   function mapState<
     M extends Exclude<keyof MappedState, keyof GetRootProp<"state">>, // 去掉根模块，它的键不能作为命名空间
     T extends { [key: string]: (state: MappedState[M]) => any }
@@ -241,12 +245,12 @@ export function createTypedStore<S, StoreOptions extends VuexStoreOptions<S>>(
     M extends Exclude<keyof MappedGetters, keyof GetRootProp<"getters">>,
     K extends keyof MappedGetters[M]
   >(namespace: M, map: K[]): { [Key in K]: () => MappedGetters[M][Key] }; // 有命名空间，map是数组
-  function mapGetters<K extends keyof MappedGetters>(
+  function mapGetters<K extends keyof FlattedGetters>(
     map: K[]
-  ): { [Key in K]: () => MappedGetters[K] }; // 没有命名空间，map是数组
-  function mapGetters<T extends { [key: string]: keyof MappedGetters }>(
+  ): { [Key in K]: () => FlattedGetters[K] }; // 没有命名空间，map是数组
+  function mapGetters<T extends { [key: string]: keyof FlattedGetters }>(
     map: T
-  ): { [Key in keyof T]: () => MappedGetters[T[Key]] }; // 没有命名空间，map是对象
+  ): { [Key in keyof T]: () => FlattedGetters[T[Key]] }; // 没有命名空间，map是对象
   function mapGetters<
     M extends Exclude<keyof MappedGetters, keyof GetRootProp<"getters">>,
     T extends { [key: string]: keyof MappedGetters[M] }
