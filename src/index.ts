@@ -1,5 +1,6 @@
 import Vue from "vue";
-import Vuex, {
+import Vuex from "vuex";
+import type {
   Store,
   StoreOptions as VuexStoreOptions,
 } from "vuex/types/index.js";
