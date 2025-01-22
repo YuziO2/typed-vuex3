@@ -1,0 +1,27 @@
+{
+  "name": "typed-vuex3",
+  "version": "0.0.2",
+  "description": "Vuex store with TypeScript support",
+  "keywords": ["vuex", "typescript", "vue"],
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "peerDependencies": {
+    "vue": "2.7.16",
+    "vuex": "3.6.2"
+  },
+  "devDependencies": {
+    "@types/node": "^18",
+    "typescript": "5.5.4",
+    "vue": "2.7.16",
+    "vuex": "3.6.2"
+  },
+  "author": "YuziO2",
+  "license": "MIT"
+}
