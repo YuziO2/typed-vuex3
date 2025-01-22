@@ -88,7 +88,7 @@ export function createTypedStore<S, StoreOptions extends VuexStoreOptions<S>>(
     T,
     U extends string,
     Depth extends number[] = []
-  > = Depth["length"] extends 7
+  > = Depth["length"] extends 5
     ? {}
     : T extends {
         modules: infer M;
