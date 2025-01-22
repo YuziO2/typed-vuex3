@@ -56,11 +56,56 @@ declare module "vue/types/vue" {
 }
 ```
 
-### 2. 在组件中使用
+### 2. 在Store中使用
+
+本项目也提供了Commit和Dispatch工具类，可以在store中进行类型标注。 
+以`@store/modules/userInfo.ts`为例
 
 ```typescript
+import type { Commit } from 'typed-vuex3'
+const userInfoState = (): UserInfoState => ({
+  userInfo: {
+    userName: '',
+    companyName: '',
+    userMobile: '',
+    roleName: '',
+    autoApproved: false,
+  },
+  btnPermissions: [],
+  menuPermissions: [],
+  initialized: false,
+})
+
+const mutations = {
+  setUserInfo(state: UserInfoState, payload: UserInfo) {
+    state.initialized = true
+    state.userInfo = { ...payload }
+  },
+}
+
+const actions = {
+  async getUserInfo(
+    { commit, state }: { commit: Commit<typeof mutations>; // 使用Commit<typeof mutations>对commit获得类型标注
+      state: UserInfoState },
+    { router }: { router: Router }
+  ) {
+    let userInfoRes = null
+    try {
+      userInfoRes = await getUserInfo()
+    } catch (e) {
+      return
+    }
+    commit('setUserInfo', userInfoRes.data) //commit: <"setUserInfo">(type: "setUserInfo", payload: UserInfo) => void
+  }
+}
+```
+
+### 3. 在组件中使用
+
+因为有了完善的类型推断，所以对源代码只需作很小的改动即可获得完整的类型
+```typescript
 import Vue from 'vue'
-import { mapState, mapMutations } from './store'
+import { mapState, mapMutations } from '@/store' // 从vuex改成@/store
 
 export default Vue.extend({
   computed: {
@@ -76,7 +121,7 @@ export default Vue.extend({
   created() {
     // 完整的类型提示
     console.log(this.$$store.state.user.name)
-    this.$$store.commit('user/setName', 'Jane')
+    this.$$store.commit('user/setName', 'Jane') // $store改为$$store
   }
 })
 ```
