@@ -1,6 +1,6 @@
 {
   "name": "typed-vuex3",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Vuex store with TypeScript support",
   "keywords": ["vuex", "typescript", "vue"],
   "main": "dist/index.js",
@@ -13,8 +13,8 @@
     "prepublishOnly": "npm run build"
   },
   "peerDependencies": {
-    "vue": "2.7.16",
-    "vuex": "3.6.2"
+    "vue": "^2",
+    "vuex": "^3"
   },
   "devDependencies": {
     "@types/node": "^18",
