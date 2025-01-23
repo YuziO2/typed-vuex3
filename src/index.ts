@@ -7,6 +7,29 @@ import type {
 
 Vue.use(Vuex);
 
+export type CommitWithRoot<
+  T extends { [key: string]: (...args: any[]) => any },
+  Store extends { commit: (...args: any[]) => any } = {
+    commit: (...args: any[]) => any;
+  }
+> = {
+  <K extends keyof T>(
+    type: K,
+    ...args: [Parameters<T[K]>[1]] extends [undefined]
+      ? []
+      : [Parameters<T[K]>[1]]
+  ): ReturnType<T[K]>;
+  <
+    K extends Parameters<Store["commit"]>[0],
+    P = Parameters<Store["commit"]>[1],
+    U = ReturnType<Store["commit"]>
+  >(
+    type: K,
+    payload: P,
+    options: { root: true }
+  ): U;
+};
+
 export type Commit<T extends { [key: string]: (...args: any[]) => any }> = <
   K extends keyof T
 >(

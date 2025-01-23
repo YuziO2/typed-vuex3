@@ -1,5 +1,5 @@
 import { Store } from "vuex/types/index.js";
-import { createTypedStore } from "../src/index";
+import { Commit, CommitWithRoot, createTypedStore } from "../src/index";
 import { createTypedStore as createTypedStore2 } from "../dist";
 
 interface IState {
@@ -7,6 +7,37 @@ interface IState {
     yuzi: string;
   };
 }
+
+interface LocationState {
+  location: string;
+}
+const LocationMutations = {
+  setLocation: (state: LocationState, payload: string) => {
+    state.location = payload;
+  },
+  setLocation2: (state: LocationState) => {
+    state.location = "location2";
+  },
+};
+
+const testAction = async (
+  {
+    state,
+    commit,
+  }: {
+    state: LocationState;
+    commit: CommitWithRoot<typeof LocationMutations, typeof store>; // TODO ERROR：testAction没在storeOption中就正常，在storeOption中就报错循环引用（69行）
+  },
+  payload: string
+) => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      commit("setLocation", payload);
+      commit("setLocationInfo", "1", { root: true }); // 使用根命名空间
+      resolve(state.location + payload);
+    }, 1000);
+  });
+};
 
 const debug = process.env.NODE_ENV !== "production";
 const storeOptions = {
@@ -18,22 +49,24 @@ const storeOptions = {
       getters: {
         getLocation: () => "location",
       },
-      mutations: {
-        setLocation: (state: any, payload: string) => {
-          state.location = payload;
-        },
-        setLocation2: (state: any) => {
-          state.location = "location2";
-        },
-      },
+      mutations: LocationMutations,
       actions: {
-        asyncAction: async (state: any, payload: any) => {
+        asyncAction: async (
+          {
+            state,
+            commit,
+          }: { state: LocationState; commit: Commit<typeof LocationMutations> },
+          payload: string
+        ) => {
           return new Promise((resolve) => {
             setTimeout(() => {
+              commit("setLocation", payload);
+              // commit("setLocationInfo", payload, { root: true });
               resolve(state.location + payload);
             }, 1000);
           });
         },
+        // testAction: testAction,
       },
     },
     userInfo: {
@@ -108,8 +141,9 @@ const storeOptions = {
     getUser1: (state: any) => {
       console.log(state, "123");
     },
-    setLocationInfo: (state: any, payload: boolean) => {
+    setLocationInfo: (state: any, payload: string) => {
       console.log(state, payload);
+      return state.location + payload;
     },
   },
   strict: debug,
