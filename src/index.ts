@@ -19,7 +19,7 @@ export type Commit<T extends { [key: string]: (...args: any[]) => any }> = <
 export type Dispatch<T extends { [key: string]: (...args: any[]) => any }> =
   Commit<T>; // 供dispatch函数使用
 
-export function createTypedStore<S, StoreOptions extends VuexStoreOptions<S>>(
+export function createTypedStore<StoreOptions extends VuexStoreOptions<any>>(
   storeOptions: StoreOptions
 ) {
   // 基础 ModuleMap

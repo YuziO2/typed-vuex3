@@ -2,6 +2,12 @@ import { Store } from "vuex/types/index.js";
 import { createTypedStore } from "../src/index";
 import { createTypedStore as createTypedStore2 } from "../dist";
 
+interface IState {
+  user: {
+    yuzi: string;
+  };
+}
+
 const debug = process.env.NODE_ENV !== "production";
 const storeOptions = {
   modules: {
@@ -92,10 +98,10 @@ const storeOptions = {
     user: {
       yuzi: "yuzer",
     },
-  },
+  } satisfies IState,
   getters: {
-    getUser: (state: any) => {
-      return state.user.yuzi as string;
+    getUser: (state: IState) => {
+      return state.user.yuzi;
     },
   },
   mutations: {
@@ -132,6 +138,10 @@ const m = mapGetters("getLocation", ["getLocation"]);
 const k = mapGetters(["userInfo/test/test1/getTest1"]);
 const l = mapGetters({ getTest123: "userInfo/test/test1/getTest1" });
 store.state.userInfo.test.test1.test21.test21;
+
+store.getters.getUser;
+const mm = mapGetters({ getUser: "getUser" });
+mm.getUser;
 
 const store2 = createTypedStore2(storeOptions);
 store2.store.state.userInfo.test.test1.test21.test21;
