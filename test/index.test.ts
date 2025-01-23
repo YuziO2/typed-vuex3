@@ -25,6 +25,12 @@ const storeOptions = {
         setLocation2: (state: any) => {
           state.location = "location2";
         },
+        setLocation3: (state: any, payload?: string) => {
+          state.location = payload;
+        },
+        setLocation4: (state: any, payload: boolean) => {
+          state.location = payload;
+        },
       },
       actions: {
         asyncAction: async (state: any, payload: any) => {
@@ -155,12 +161,31 @@ commit("location/setLocation", "location2");
 // @ts-expect-error
 commit("location/setLocation");
 
+commit("location/setLocation3");
+commit("location/setLocation3", "location2");
+const ss = mapMutations("location", ["setLocation3"]);
+ss.setLocation3("location2");
+ss.setLocation3();
+
 const o = mapMutations("location", ["setLocation"]);
 o.setLocation("location2");
+// @ts-expect-error
+o.setLocation();
 const p = mapMutations("location", { setLocation: "setLocation" });
 p.setLocation("location2");
 const q = mapMutations("location", ["setLocation2"]);
 q.setLocation2();
+// @ts-expect-error
+q.setLocation2(null);
+// @ts-expect-error
+q.setLocation2("location2");
+
+const r = mapMutations("location", { setLocation4: "setLocation4" });
+r.setLocation4(true);
+// @ts-expect-error
+r.setLocation4();
+r.setLocation4(false);
+commit("location/setLocation4", false);
 
 // 将改造过后的 Store 类型声明到 vue 的原型上，这样就可以在.vue 文件中获得 IDE 的智能提示了
 declare module "vue/types/vue" {

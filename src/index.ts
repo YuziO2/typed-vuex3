@@ -7,14 +7,13 @@ import type {
 
 Vue.use(Vuex);
 
-export type Commit<T extends { [key: string]: (...args: any[]) => any }> = <
-  K extends keyof T
->(
-  type: K,
-  ...args: [Parameters<T[K]>[1]] extends [undefined]
-    ? []
-    : [Parameters<T[K]>[1]]
-) => ReturnType<T[K]>; // 供commit函数使用
+export type Commit<T extends { [key: string]: (...args: any[]) => any }> = {
+  <K extends keyof T>(
+    type: K,
+    ...args: undefined extends Parameters<T[K]>[1] ? [] : [Parameters<T[K]>[1]]
+  ): ReturnType<T[K]>;
+  <K extends keyof T>(type: K, payload: Parameters<T[K]>[1]): ReturnType<T[K]>;
+}; // 供commit函数使用
 
 export type Dispatch<T extends { [key: string]: (...args: any[]) => any }> =
   Commit<T>; // 供dispatch函数使用
@@ -264,8 +263,8 @@ export function createTypedStore<StoreOptions extends VuexStoreOptions<any>>(
     return Vuex.mapGetters(...args);
   }
 
-  type ConditionalPayloadFunction<P, R> = [P] extends [undefined]
-    ? () => R
+  type ConditionalPayloadFunction<P, R> = undefined extends P
+    ? (payload?: P) => R
     : (payload: P) => R;
 
   // mapMutations 函数重载声明
