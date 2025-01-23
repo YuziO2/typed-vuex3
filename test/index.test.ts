@@ -13,8 +13,11 @@ const storeOptions = {
         getLocation: () => "location",
       },
       mutations: {
-        setLocation: (state: any, payload: any) => {
+        setLocation: (state: any, payload: string) => {
           state.location = payload;
+        },
+        setLocation2: (state: any) => {
+          state.location = "location2";
         },
       },
       actions: {
@@ -133,6 +136,21 @@ store.state.userInfo.test.test1.test21.test21;
 const store2 = createTypedStore2(storeOptions);
 store2.store.state.userInfo.test.test1.test21.test21;
 store2.store;
+
+const commit = store.commit;
+commit("location/setLocation2");
+// @ts-expect-error
+commit("location/setLocation2", "location2");
+commit("location/setLocation", "location2");
+// @ts-expect-error
+commit("location/setLocation");
+
+const o = mapMutations("location", ["setLocation"]);
+o.setLocation("location2");
+const p = mapMutations("location", { setLocation: "setLocation" });
+p.setLocation("location2");
+const q = mapMutations("location", ["setLocation2"]);
+q.setLocation2();
 
 // 将改造过后的 Store 类型声明到 vue 的原型上，这样就可以在.vue 文件中获得 IDE 的智能提示了
 declare module "vue/types/vue" {

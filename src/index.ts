@@ -11,7 +11,9 @@ export type Commit<T extends { [key: string]: (...args: any[]) => any }> = <
   K extends keyof T
 >(
   type: K,
-  payload: Parameters<T[K]>[1] extends undefined ? never : Parameters<T[K]>[1]
+  ...args: [Parameters<T[K]>[1]] extends [undefined]
+    ? []
+    : [Parameters<T[K]>[1]]
 ) => ReturnType<T[K]>; // 供commit函数使用
 
 export type Dispatch<T extends { [key: string]: (...args: any[]) => any }> =
