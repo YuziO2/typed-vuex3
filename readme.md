@@ -99,6 +99,85 @@ const actions = {
   }
 }
 ```
+#### mutation/action里使用其它mutation/action的情况
+有一些store的写法，会在其mutation/action的函数定义中使用commit/dispatch函数调用同级的其它commit/dispatch函数，对于这种情况，直接用`{ commit: Commit<typeof mutations> }`来标注commit/dispatch函数会造成循环引用的问题。我们的建议是根据依赖层级对mutation/action进行拆分。例如：
+```js
+const actions = {
+  action1({state, commit}, payload){ // 没有使用其它的action
+    console.log(payload)
+  },
+  action2({state, commit, dispatch}){ //使用了其它的action
+    dispatch('action1', 1234)
+  }
+}
+export default {
+  namespaced: true,
+  actions
+}
+```
+改造后：
+```ts
+import type { Commit, Dispatch } from 'typed-vuex3'
+
+const actions1 = {
+  action1({ state, commit }: { state: State; commit: Commit<typeof mutations> }, payload: any){ // 没有使用其它的action
+    console.log(payload)
+  },
+}
+const actions2 = {
+  action2({ state, commit, dispatch }: 
+    { state: State; commit: Commit<typeof mutations>; dispatch: Dispatch<typeof actions1> }){ // 把用到的actions隔开，在这里的泛型就传用到的那一组actions（此处为actions1）
+    dispatch('action1', 1234)
+  }
+}
+export default {
+  namespaced: true,
+  actions: {
+    ...actions1,
+    ...actions2
+  } // 这里要进行一个合并
+}
+```
+
+#### root: true的情况
+Vuex的namespace提供了一种在命名空间中直接访问全局store的方法：在创建mutations和actions时，第二个参数加入rootXXX，第三个参数传入`{root: true}`，详见[文档链接](https://vuex.vuejs.org/zh/guide/modules.html#%E5%9C%A8%E5%B8%A6%E5%91%BD%E5%90%8D%E7%A9%BA%E9%97%B4%E7%9A%84%E6%A8%A1%E5%9D%97%E5%86%85%E8%AE%BF%E9%97%AE%E5%85%A8%E5%B1%80%E5%86%85%E5%AE%B9%EF%BC%88global-assets%EF%BC%89)。
+对于这种极为灵活的情况，我们的泛型系统会难以处理【主要是会有类型循环引用的问题】，无法进行这样的commit和dispatch函数进行类型提示。所以对使用根的情况，我们可以将使用`{root: true}`改成`import store from '@/store'`，然后使用这个store来代替【实际上，效果也完全相同】，这样我们就可以继续获得完整的类型提示。示例：
+
+改造前：
+```js
+actions: {
+  // 在这个模块中， dispatch 和 commit 也被局部化了
+  // 他们可以接受 `root` 属性以访问根 dispatch 或 commit
+  someAction ({ commit, getters, rootGetters }) {
+    getters.someGetter // -> 'foo/someGetter'
+    rootGetters.someGetter // -> 'someGetter'
+    rootGetters['bar/someGetter'] // -> 'bar/someGetter'
+
+    commit('someMutation') // -> 'foo/someMutation'
+    commit('someMutation', null, { root: true }) // -> 'someMutation'
+  }
+}
+```
+改造后：
+```ts
+import type { Commit, Getter } from 'typed-vuex3'
+import store from '@/store'
+......
+actions: {
+  someAction ({ commit, getters }: {
+    commit: Commit<typeof mutations>;
+    getters: Getter<typeof getter>;
+  }) {
+    const rootGetters = store.getters
+    getters.someGetter // -> 'foo/someGetter'
+    rootGetters.someGetter // -> 'someGetter'
+    rootGetters['bar/someGetter'] // -> 'bar/someGetter'
+
+    commit('someMutation') // -> 'foo/someMutation'
+    store.commit('someMutation') // -> 'someMutation'
+  },
+}
+```
 
 ### 3. 在组件中使用
 

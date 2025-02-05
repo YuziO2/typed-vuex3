@@ -1,5 +1,5 @@
 import { Store } from "vuex/types/index.js";
-import { createTypedStore } from "../src/index";
+import { createTypedStore, Getter } from "../src/index";
 import { createTypedStore as createTypedStore2 } from "../dist";
 
 interface IState {
@@ -8,6 +8,10 @@ interface IState {
   };
 }
 
+const locationGetters = {
+  getLocation: () => "location",
+};
+
 const debug = process.env.NODE_ENV !== "production";
 const storeOptions = {
   modules: {
@@ -15,9 +19,7 @@ const storeOptions = {
       state: {
         location: "location",
       },
-      getters: {
-        getLocation: () => "location",
-      },
+      getters: locationGetters,
       mutations: {
         setLocation: (state: any, payload: string) => {
           state.location = payload;
@@ -33,9 +35,16 @@ const storeOptions = {
         },
       },
       actions: {
-        asyncAction: async (state: any, payload: any) => {
+        asyncAction: async (
+          {
+            state,
+            getters,
+          }: { state: any; getters: Getter<typeof locationGetters> },
+          payload: any
+        ) => {
           return new Promise((resolve) => {
             setTimeout(() => {
+              console.log(getters.getLocation);
               resolve(state.location + payload);
             }, 1000);
           });

@@ -7,6 +7,11 @@ import type {
 
 Vue.use(Vuex);
 
+// 将 getter 函数转换成 {getterName: getterFuncsReturnType} 的对象类型
+export type Getter<T extends { [key: string]: (...args: any) => any }> = {
+  [P in keyof T]: ReturnType<T[P]>;
+};
+
 export type Commit<T extends { [key: string]: (...args: any[]) => any }> = {
   <K extends keyof T>(
     type: K,
@@ -171,11 +176,6 @@ export function createTypedStore<StoreOptions extends VuexStoreOptions<any>>(
     }[keyof ModuleMap]
   >;
 
-  // 将 getter 函数转换成 {getterName: getterFuncsReturnType} 的对象类型
-  type ReturnGetters<T extends { [key: string]: (...args: any) => any }> = {
-    [P in keyof T]: ReturnType<T[P]>;
-  };
-
   // 提取所有 module 的 getter 函数类型对象
   type MappedGetters = {
     [K in keyof ModuleMap as "getters" extends keyof ModuleMap[K]
@@ -183,14 +183,14 @@ export function createTypedStore<StoreOptions extends VuexStoreOptions<any>>(
       : never]: ModuleMap[K] extends {
       [key in "getters"]: { [key: string]: (...args: any) => any };
     }
-      ? ReturnGetters<ModuleMap[K]["getters"]>
+      ? Getter<ModuleMap[K]["getters"]>
       : never;
     // @ts-expect-error
-  } & ReturnGetters<GetRootProp<"getters">>;
+  } & Getter<GetRootProp<"getters">>;
   // @ts-expect-error
-  type FlattedGetters = ReturnGetters<FlatModuleProperty<"getters">> &
+  type FlattedGetters = Getter<FlatModuleProperty<"getters">> &
     // @ts-expect-error
-    ReturnGetters<GetRootProp<"getters">>;
+    Getter<GetRootProp<"getters">>;
 
   // 处理 store 的 mutations 类型
   // 将 mutation 函数名及 payload 类型转换成 commit 函数的两个入参类型
