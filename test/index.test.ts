@@ -136,8 +136,9 @@ export const { store, mapState, mapGetters, mapMutations, mapActions } =
 const a = mapState("userInfo/test/test1", ["test1"]);
 store;
 const b = mapGetters("userInfo/test/test1", ["getTest1"]);
-
+// @ts-expect-error vuex不支持该种写法
 const c = mapState(["userInfo/userInfo2"]);
+// @ts-expect-error vuex不支持该种写法
 const d = mapState(["userInfo/test/test"]);
 store.state.userInfo.test.test;
 const e = mapState(["user"]);
