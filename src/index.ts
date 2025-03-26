@@ -5,24 +5,151 @@ import type { Store, StoreOptions as VuexStoreOptions } from 'vuex/types/index.j
 
 Vue.use(Vuex);
 
+
+// type exampleStoreOptions = {
+//   modules: {
+//     modules1:{
+//       state: {modules1State: boolean},
+//       getters: {getModules1Name: (state: IState) => string|number},
+//       mutations: {setModules1State: (state: IState, payload: boolean) => void},
+//       actions: {modules1Action: (context: any, payload: number) => number},
+//       modules:{
+//         modules1Child:{
+//           state: {modules1ChildState: boolean},
+//           getters: {getModules1ChildName: (state: IState) => string|number},
+//           mutations: {setModules1ChildState: (state: IState, payload: boolean) => void},
+//           actions: {modules1ChildAction: (context: any, payload: number) => number},
+//         }
+//       }
+//     }
+//     modules2:{
+//       state: {modules2State: {modules2Name: string}},
+//       getters: {getModules2Name: (state: IState) => string|boolean},
+//       mutations: {setModules2State: (state: IState, payload: string) => void},
+//       actions: {modules2Action: (context: any, payload: boolean) => number},
+//       modules:{
+//         modules2Child:{
+//           state: {modules2ChildState: {modules2ChildName: string}},
+//           getters: {getModules2ChildName: (state: IState) => string|number}
+//           mutations: {setModules2ChildState: (state: IState, payload: boolean) => void}
+//           actions: {modules2ChildAction: (context: any, payload: number) => number}
+//         }
+//       }
+//     }
+//   },
+//   state: {
+//     user: {
+//       yuzi: string,
+//     },
+//     car:{
+//       carId: string,
+//       nian: number
+//     }
+//   },
+//   getters: {
+//     getUser: (state: IState) => string
+//   },
+//   mutations: {
+//     getUser1: (state: IState) => void
+//     setLocationInfo: (state: IState, payload: boolean) => void
+//   },
+//   actions:{
+//     setUser: ({commit}:any, user:{yuzi:string}) => Promise<string>
+//   }
+// }
+
 export function createTypedStore<StoreOptions extends VuexStoreOptions<any>>(storeOptions: StoreOptions) {
-  // 基础 ModuleMap
+  // type StoreOptions = exampleStoreOptions
+
+  /**
+   * 将StoreOptions里的modules提取出来
+   * @example
+   * ```
+   * type StoreOptions = exampleStoreOptions
+   * type BaseModuleMap = {
+   *  modules1:{
+   *    state: {modules1State: boolean},
+   *    getters: {getModules1Name: (state: IState) => string|number},
+   *    mutations: {setModules1State: (state: IState, payload: boolean) => void},
+   *    actions: {modules1Action: (context: any, payload: number) => number},
+   *    modules:{
+   *      modules1Child:{
+   *        state: {modules1ChildState: boolean},
+   *        getters: {getModules1ChildName: (state: IState) => string|number},
+   *        mutations: {setModules1ChildState: (state: IState, payload: boolean) => void},
+   *        actions: {modules1ChildAction: (context: any, payload: number) => number},
+   *      }
+   *    }
+   *  }
+   *  modules2:{
+   *    state: {modules2State: {modules2Name: string}},
+   *    getters: {getModules2Name: (state: IState) => string|boolean},
+   *    mutations: {setModules2State: (state: IState, payload: string) => void},
+   *    actions: {modules2Action: (context: any, payload: boolean) => number},
+   *    modules:{
+   *      modules2Child:{
+   *        state: {modules2ChildState: {modules2ChildName: string}},
+   *        getters: {getModules2ChildName: (state: IState) => string|number}
+   *        mutations: {setModules2ChildState: (state: IState, payload: boolean) => void}
+   *        actions: {modules2ChildAction: (context: any, payload: number) => number}
+   *      }
+   *    }
+   *  }
+   *}
+   */
   type BaseModuleMap = {
     [K in keyof StoreOptions['modules']]: StoreOptions['modules'][K];
   };
 
+  /**
+   * 获取根Store上的'state' / 'getters' / 'actions' / 'mutations'
+   * @example
+   * ```
+   * type StoreOptions = exampleStoreOptions
+   * type test1 = GetRootProp<'state'>    // test1为 {user: {yuzi: string}, car: {carId: string, nian: number}}
+   * type test2 = GetRootProp<'getters'>  // test2为 { getUser: (state: IState) => string }
+   */
   type GetRootProp<K, Keys = 'state' | 'getters' | 'actions' | 'mutations'> = K extends Keys
     ? K extends keyof StoreOptions
       ? StoreOptions[K]
       : {}
     : {};
-  /** 命名空间路径 */
+
+  /** 
+   * 命名空间路径 
+   * @example
+   * type StoreOptions = exampleStoreOptions
+   * type ModulesPath = "/modules1/" | "/modules1/modules/modules1Child/" | "/modules2/" | "/modules2/modules/modules2Child/"
+   */
   type ModulesPath = FlatUnionArr<ExtractModulesPaths<BaseModuleMap>>;
+
+  /**
+   * 处理命名空间路径
+   * @example
+   * ```
+   * type ModulesPath = "/modules1/" | "/modules1/modules/modules1Child/" | "/modules2/" | "/modules2/modules/modules2Child/"
+   * type ModulesKey = {
+   *  modules1: ["modules1"];
+   *  "modules1/modules1Child": ["modules1", "modules", "modules1Child"];
+   *  modules2: ["modules2"];
+   *  "modules2/modules2Child": ["modules2", "modules", "modules2Child"];
+   * }
+   */
   type ModulesKey = {
-    [K in ModulesPath as Join<Split<RemoveSlash<K>, 'modules'>, '/'>]: TrimArrayBoth<Split<K, '/'>>;
+    [K in ModulesPath as RemoveSlash<Join<Split<K, '/modules/'>, '/'>>]: TrimArrayBoth<Split<K, '/'>>;
   };
 
-  // 最终的 ModuleMap
+  /** 
+   * 最终的 ModuleMap 
+   * @example
+   * ```
+   * type ModuleMap = {
+   *  modules1: {}, // exampleStoreOptions中modules1里的全部元素
+   *  "modules1/modules1Child": {}, // exampleStoreOptions中modules1.modules.modules1Child的全部元素
+   *  modules2: {}, // exampleStoreOptions中modules2里的全部元素
+   *  "modules2/modules2Child": {}, // exampleStoreOptions中modules2.modules.modules2Child的全部元素
+   * } 
+   */
   type ModuleMap = {
     [K in keyof ModulesKey]: Get<BaseModuleMap, ModulesKey[K]>;
   };
@@ -62,18 +189,64 @@ export function createTypedStore<StoreOptions extends VuexStoreOptions<any>>(sto
   >;
 
 
-  /** 仅供 MapStates({a: (state:NestedState) => state.a}) 使用 */
+  /** 
+   * 将store的state属性展开，仅供 MapStates({a: (state:NestedState) => state.a}) 使用 
+   * @example
+   * ```
+   * NestedState['car'] // 根store里state中的car的类型
+   * NestedState['modules1']['modules1State'] // modules1中state的类型
+   * NestedState['modules2']['modules2Child']['modules2ChildState'] // modules2Child中modules2ChildState的类型
+   */
   type NestedState = FlattenModuleState<BaseModuleMap> & GetRootProp<'state'>
 
-  /** 供传命名空间的 mapState 使用 */
+  /** 
+   * 供传命名空间的 mapState 使用 
+   * @example
+   * ```
+   * type MappedState = {
+   *  modules1: {
+   *    modules1State: boolean;
+   *  };
+   *  "modules1/modules1Child": {
+   *    modules1ChildState: boolean;
+   *  };
+   *  modules2: {
+   *    modules2State: {
+   *      modules2Name: string;
+   *    };
+   *  };
+   *  "modules2/modules2Child": {
+   *    modules2ChildState:  {
+   *      modules2ChildName: string;
+   *    };
+   *  };
+   *}
+   */
   type MappedState = {
     [K in keyof ModuleMap as 'state' extends keyof ModuleMap[K] ? K: never]: ModuleMap[K]['state'] extends (...args: any[]) => any
       ? ReturnType<ModuleMap[K]['state']>
       : ModuleMap[K]['state'];
   };
-  type FlattedState = FlatModuleProperty<'state'> & GetRootProp<'state'>;
 
-  /** 供传命名空间的 mapGetters 使用 */
+  /** 
+   * 供传命名空间的 mapGetters 使用 
+   * @example
+   * ```
+   * type MappedGetters = {
+   *  modules1: {
+   *    getModules1Name: string | number;
+   *  };
+   *  "modules1/modules1Child": {
+   *    getModules1ChildName: string | number;
+   *  };
+   *  modules2: {
+   *    getModules2Name: string|boolean
+   *  };
+   *  "modules2/modules2Child": {
+   *    getModules2ChildName: string | number
+   *  };
+   *}
+   */
   type MappedGetters = {
     [K in keyof ModuleMap as 'getters' extends keyof ModuleMap[K] ? K : never]: ModuleMap[K] extends {
       [key in 'getters']: { [key: string]: (...args: any) => any };
@@ -81,13 +254,37 @@ export function createTypedStore<StoreOptions extends VuexStoreOptions<any>>(sto
       ? Getter<ModuleMap[K]['getters']>
       : never;
   };
-  /** 供不传命名空间的 mapGetters 使用 */
+  /** 
+   * 供不传命名空间的 mapGetters 使用 
+   * @example
+   * ```
+   * type FlattedGetters = {
+   *  "modules1/getModules1Name": string | number;
+   * }
+   */
   type FlattedGetters = Getter<FlatModuleProperty<'getters'>> &
     Getter<GetRootProp<'getters'>>;
 
   // 处理 store 的 mutations 类型
-  // 将 mutation 函数名及 payload 类型转换成 commit 函数的两个入参类型
+  /**
+   * 将 mutation 函数名及 payload 类型转换成 mapCommit 函数的两个入参类型，无命名空间
+   * @example
+   * ```
+   * type FlattedCommit = {
+   *  "modules1/setModules1State": (state: IState, payload: boolean) => void;
+   * }
+   */
   type FlattedCommit = FlatModuleProperty<'mutations'> & GetRootProp<'mutations'>; // 无命名空间时使用
+  /**
+   * 将 mutation 函数名及 payload 类型转换成 mapCommit 函数的两个入参类型，有命名空间
+   * @example
+   * ```
+   * type MappedCommit = {
+   *  modules1: {
+   *    setModules1State: (state: IState, payload: boolean) => void;
+   *  };
+   * }
+   */
   type MappedCommit = {
     [K in keyof ModuleMap as 'mutations' extends keyof ModuleMap[K] ? K : never]: ModuleMap[K] extends {
       [key in 'mutations']: { [key: string]: (...args: any[]) => any };
@@ -96,7 +293,26 @@ export function createTypedStore<StoreOptions extends VuexStoreOptions<any>>(sto
       : never;
   };
 
+  // 处理 store 的 actions 类型
+  /**
+   * 将 actions 函数名及 payload 类型转换成 mapMutations 函数的两个入参类型，无命名空间
+   * @example
+   * ```
+   * type FlattedDispatch = {
+   *  "modules1/modules1Action": (context: any, payload: number) => number;
+   * }
+   */
   type FlattedDispatch = FlatModuleProperty<'actions'> & GetRootProp<'actions'>; // 无命名空间时使用
+  /**
+   * 将 actions 函数名及 payload 类型转换成 mapActions 函数的两个入参类型，有命名空间
+   * @example
+   * ```
+   * type MappedDispatch = {
+   *  modules1: {
+   *    modules1Action: (context: any, payload: number) => number;
+   *  };
+   * }
+   */
   type MappedDispatch = {
     [K in keyof ModuleMap as 'actions' extends keyof ModuleMap[K] ? K : never]: ModuleMap[K] extends {
       [key in 'actions']: { [key: string]: (...args: any[]) => any };
@@ -344,9 +560,9 @@ type FlatUnionArr<U> = U extends U ? (U extends (infer R)[] ? R : never) : never
 type Shift<T extends any[]> = T extends [infer R1, ...infer R2] ? R2 : T;
 
 /**
- * 删除所有的 ‘/’
+ * 删除字符串前后的 ‘/’
  */
-type RemoveSlash<S extends string> = Join<Split<S, '/'>, ''>;
+type RemoveSlash<S extends string> = S extends `/${infer T}/` ? T : S
 
 /**
  * 将字符串按指定分隔符分割成数组
