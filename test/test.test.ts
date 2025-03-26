@@ -65,9 +65,6 @@ const storeOptions = {
       },
       modules: {
         test: {
-          state: () => ({
-            test: "test",
-          }),
           getters: {
             getTest: () => "test",
           },
@@ -157,8 +154,8 @@ const mapStateExample3 = {...mapState({
   alias1: (state) => state.user.yuzi,
   alias2: (state) => state.userInfo.test.test1.test2,
 })}
-const mapStateExample4 = {...mapState('userInfo/test',{
-  alias1: (state) => state.test,
+const mapStateExample4 = {...mapState('userInfo/test/test1',{
+  alias1: (state) => state.test1,
 })}
 // @ts-expect-error mapState不支持该种写法,未传命名空间，数组取值只能取根store上的store
 const mapStateExample5 = {...mapState(['userInfo/userInfo2'])}
@@ -219,7 +216,7 @@ type cases = [
 
 /** 测试通过tsc打包后的类型推断与打包前的是否一致 */
 const { store:storeDist, mapState:mapStateDist, mapGetters:mapGettersDist, mapMutations:mapMutationsDist, mapActions:mapActionsDist } = createTypedStoreDist(storeOptions);
-storeDist.state.userInfo.test.test1.test21.test21;
+storeDist.state.userInfo.test.test1.test1
 
 const mapStateDistExample1 = {...mapStateDist(['car','user'])}
 const mapStateDistExample2 = {...mapStateDist('userInfo',['phone','userInfo'])}
@@ -227,8 +224,8 @@ const mapStateDistExample3 = {...mapStateDist({
   alias1: (state) => state.user.yuzi,
   alias2: (state) => state.userInfo.test.test1.test2,
 })}
-const mapStateDistExample4 = {...mapStateDist('userInfo/test',{
-  alias1: (state) => state.test,
+const mapStateDistExample4 = {...mapStateDist('userInfo/test/test1',{
+  alias1: (state) => state.test1,
 })}
 
 type mapStateCases = [

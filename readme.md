@@ -232,3 +232,4 @@ store.dispatch('user/fetchName') // 返回值类型推导
 1. 需要使用 TypeScript 4.0 或更高版本
 2. 需要在 tsconfig.json 中启用 `strict` 模式
 3. 与 Vuex 3.x 版本兼容，不支持 Vuex 4.x
+4. 不支持命名空间命名为modules

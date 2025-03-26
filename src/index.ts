@@ -9,7 +9,7 @@ Vue.use(Vuex);
 // type exampleStoreOptions = {
 //   modules: {
 //     modules1:{
-//       state: {modules1State: boolean},
+//       // state: {modules1State: boolean},
 //       getters: {getModules1Name: (state: IState) => string|number},
 //       mutations: {setModules1State: (state: IState, payload: boolean) => void},
 //       actions: {modules1Action: (context: any, payload: number) => number},
@@ -33,7 +33,7 @@ Vue.use(Vuex);
 //           getters: {getModules2ChildName: (state: IState) => string|number}
 //           mutations: {setModules2ChildState: (state: IState, payload: boolean) => void}
 //           actions: {modules2ChildAction: (context: any, payload: number) => number}
-//         }
+//         },
 //       }
 //     }
 //   },
@@ -466,7 +466,9 @@ type FlattenModuleState<T> = {
       ? S extends (...args: any[]) => any 
         ? ReturnType<S> 
         : S
-      : T[K];
+      : T[K] extends { modules: infer M }
+				? FlattenModuleState<M>
+				: T[K]
 };
 
 /** 将 getter 函数转换成 {getterName: getterFuncsReturnType} 的对象类型 */
